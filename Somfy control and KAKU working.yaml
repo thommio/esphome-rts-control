@@ -1,0 +1,177 @@
+esphome:
+  name: rts-control-2-5-2023
+  friendly_name: rts control 2-5-2023
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+external_components:
+  - source: github://jseyster/esphome-rts-control@master
+    components: [ rts ]
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "C2C8c5Bbl4UgTEwP+Z7fPrBj/l0egtI7/Fo1vSi18vk="
+
+ota:
+  password: "e17331ca89ad238d35471018e231c651"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Rts-Control-2-5-2023"
+    password: "6r7NOvB5V5u2"
+
+captive_portal:
+
+# The transmitter must be configured for 100% duty cycle.
+remote_transmitter:
+  id: rts_transmitter
+  pin: GPIO4  # Use the number for the output pin connected to your radio.
+  carrier_duty_percent: 100
+
+rts:
+  transmitter_id: rts_transmitter
+
+  # Optional: you can configure how many times you want commands to
+  # repeat to compensate for poor signal or interference. RTS devices
+  # are designed to ignore any repeated commands that follow a
+  # successful transmission.
+  command_repetitions: 2  # The default.
+
+cover:
+  - platform: rts
+    id: shade_lv
+    name: Living room shade
+    device_class: shade
+
+  - platform: rts
+    id: shade_brr
+    name: Bedroom shade right
+    device_class: shade
+ 
+  - platform: rts
+    id: shade_brl
+    name: Bedroom shade left (desk)
+    device_class: shade
+
+# Expose internal controller state for backup in case of data loss on
+# the ESP microcontroller.
+sensor:
+  - platform: rts
+    rts_cover_id: shade_lv
+    channel_id:
+      name: Channel id of living room curtain controller
+    rolling_code:
+      name: Next rolling code value for living room curtain
+  - platform: rts
+    rts_cover_id: shade_brr
+    channel_id:
+      name: Channel id of living room shade controller
+    rolling_code:
+      name: Next rolling code value for living room shade
+  - platform: rts
+    rts_cover_id: shade_brl
+    channel_id:
+      name: Channel id of living room shade controller
+    rolling_code:
+      name: Next rolling code value for living room shade
+
+# Pairing buttons that can be removed after all "cover" devices are
+# paired as desired.
+button:
+  - platform: template
+    name: Program living room shade
+    on_press:
+      - rts.program: shade_lv
+  - platform: template
+    name: Program bedroom shade right
+    on_press:
+      - rts.program: shade_brr
+  - platform: template
+    name: Program bedroom shade left
+    on_press:
+      - rts.program: shade_brl
+
+switch:
+
+  - platform: template
+    name: KAKU 1 aan
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x17454E6
+          state: 1
+          group: 0
+          channel: 0
+          level: 0
+          repeat:
+            times: 5
+  
+  - platform: template
+    name: KAKU 1 uit
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x17454E6
+          state: 0
+          group: 0
+          channel: 0
+          level: 0
+          repeat:
+            times: 5
+
+  - platform: template
+    name: KAKU 2 aan
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x17454E6
+          state: 1
+          group: 0
+          channel: 1
+          level: 0
+          repeat:
+            times: 5
+              
+  - platform: template
+    name: KAKU 2 uit
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x17454E6
+          state: 0
+          group: 0
+          channel: 1
+          level: 0
+          repeat:
+            times: 5
+            
+  - platform: template
+    name: KAKU 3 aan
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x1404656
+          state: 1
+          group: 0
+          channel: 9
+          level: 0
+          repeat:
+            times: 5
+  
+  - platform: template
+    name: KAKU 3 uit
+    turn_on_action:
+      - remote_transmitter.transmit_nexa:
+          device: 0x1404656
+          state: 0
+          group: 0
+          channel: 9
+          level: 0
+          repeat:
+            times: 5
